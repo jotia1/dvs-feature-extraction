@@ -183,8 +183,17 @@ for ikernel = 1 : nkernels
     plot(sscore(:, ikernel), 'color', rand(3, 1));
     %plot(scores, '.', 'color', rand(3, 1));
 end
-title(sprintf('Percent number of zeros in result, %s from %d to %d', ffilename, sevent, nevents));
+title(sprintf('Percent number of zeros in result, %s from %d to %d', ...
+    ffilename, sevent, nevents));
 xlabel('Evolution number');
 ylabel('Percentage of zeros');
 
-
+% Will need to save variables to visualise later
+if isGPUCluster()
+    % Generate filename: nKernels-nevolutions-date 
+    outname = sprintf('%d-%d-%s', nkernels, nevolutions, ...
+        char(datetime('now','TimeZone','local','Format','d-MM-y-HH:mm:ss')));
+    save(outname, 'nevolutions', 'nkernels', 'kvhistory', 'khistory', ...
+        'sscore', 'mutant_wins');
+    disp(outname)
+end
