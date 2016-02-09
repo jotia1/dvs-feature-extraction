@@ -2,6 +2,8 @@
 % Grow a community of intially random kerns simultaneously
 sevent = 1;
 
+pwd
+
 filename = 'data/D-7-8-D-nm1-60s.aedat';sevent = 2001; nevents = 4840;
 %filename = 'animal_farm.aedat'; nevents = 50000;
 
@@ -27,7 +29,7 @@ zeroz = find(data == 0);
 data(zeroz) = -1/27;
 
 nkernels = 2;
-nevolutions = 200;
+nevolutions = 20;
 khistory = cell(nevolutions, nkernels); % history of what each kernal looked like
 kvhistory = cell(nevolutions, nkernels); % history of each kernals value
 
@@ -188,11 +190,13 @@ title(sprintf('Percent number of zeros in result, %s from %d to %d', ...
 xlabel('Evolution number');
 ylabel('Percentage of zeros');
 
+isGPUCluster()
+system('hostname')
 % Will need to save variables to visualise later
 if isGPUCluster()
     % Generate filename: nKernels-nevolutions-date 
     outname = sprintf('%d-%d-%s', nkernels, nevolutions, ...
-        char(datetime('now','TimeZone','local','Format','d-MM-y-HH:mm:ss')));
+        char(datetime('now','Format','d-MM-y-HH:mm:ss')));
     save(outname, 'nevolutions', 'nkernels', 'kvhistory', 'khistory', ...
         'sscore', 'mutant_wins');
     disp(outname)

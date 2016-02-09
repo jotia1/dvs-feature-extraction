@@ -5,7 +5,7 @@ function [ is_cluster ] = isGPUCluster(  )
 
     [ ~, hostname ] = system('hostname');
     is_cluster = 0;
-    if strfind(hostname, 'goliath') > 0;
+    if strfind(hostname, 'compute.eait') > 0;
         is_cluster = 1;
     end
     
