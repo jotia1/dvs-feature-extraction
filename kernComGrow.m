@@ -2,10 +2,8 @@
 % Grow a community of intially random kerns simultaneously
 sevent = 1;
 
-pwd
-
 filename = 'data/D-7-8-D-nm1-60s.aedat';sevent = 2001; nevents = 4840;
-%filename = 'animal_farm.aedat'; nevents = 50000;
+%filename = 'data/animal_farm.aedat'; nevents = 1600000;
 
 ffilename = filename;
 ffilename(ffilename == '_') = ' ';  % Generate graph friendly name
@@ -45,19 +43,24 @@ end
 %maxfig = figure;
 cjet = colormap;%[jet; 1 1 1];
 
-mscores = zeros(nevolutions, nkernels) * -Inf;
-cscores = zeros(nevolutions, nkernels) * -Inf;
-sscore = zeros(nevolutions, nkernels) * -Inf;
+if isGPUCluster()
+  disp('yes on cluster');
+    data = gpuArray(double(data));  % Copy data to GPU  
+end
+
+mscores = zeros(nevolutions, nkernels, 'gpuArray') * -Inf;
+cscores = zeros(nevolutions, nkernels, 'gpuArray') * -Inf;
+sscore = zeros(nevolutions, nkernels, 'gpuArray') * -Inf;
 mutant_wins = [];
 prog = figure;
 hold on
 % For each evolution
 for ievolution = 2 : nevolutions   
     %% Show a graph of the last evolution
-    res = zeros(nkernels + 1, 190, 180, size(data, 3)); % +1 for mutant
+    res = zeros(nkernels + 1, 190, 180, size(data, 3), 'gpuArray'); % +1 for mutant
     % Performance of champions
     for convol = 1 : nkernels
-        old_champ = khistory{ievolution - 1, convol};
+        old_champ = double(khistory{ievolution - 1, convol});
         rr = convn(data, old_champ, 'same'); % ./ sum(abs(old_champ(:)));
         rr(zeroz) = 0;  % Only consider 1 centered positions
         res(convol, :, :, :) = rr;
@@ -190,8 +193,6 @@ title(sprintf('Percent number of zeros in result, %s from %d to %d', ...
 xlabel('Evolution number');
 ylabel('Percentage of zeros');
 
-isGPUCluster()
-system('hostname')
 % Will need to save variables to visualise later
 if isGPUCluster()
     % Generate filename: nKernels-nevolutions-date 
