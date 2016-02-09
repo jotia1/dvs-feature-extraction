@@ -15,11 +15,6 @@ ys = ys(sevent:nevents);
 ts = ts(sevent:nevents);
 ps = ps(sevent:nevents);
 
-%         xs = xs(ps==-1,:);
-%         ys = ys(ps==-1,:);
-%         ts = ts(ps==-1,:);
-%         ps = ps(ps==-1,:);
-
 aedatData = [xs, ys, ts, ps, [sizex; sizey; zeros(size(xs, 1)-2, 1)]];
 data = aedat2voxel(aedatData, 1, 1, 25);
 data = data(190*2 + 1: 190*3, :, :);
@@ -33,18 +28,15 @@ kvhistory = cell(nevolutions, nkernels); % history of each kernals value
 
 % Create kernels with initial value 0
 for i = 1:nkernels;
-    khistory{1, i} = randKern(); %zeros(3, 3, 3);
+    khistory{1, i} = randKern();
     kvhistory{1, i} = -Inf;
 end
 
-%    khistory{1, nkernels} = zeros(3, 3, 3);
-%    kvhistory{1, nkernels} = 0;
 
-%maxfig = figure;
-cjet = colormap;%[jet; 1 1 1];
+cjet = colormap;
 
 if isGPUCluster()
-  disp('yes on cluster');
+    disp('yes on cluster');
     data = gpuArray(double(data));  % Copy data to GPU  
 end
 
@@ -61,7 +53,7 @@ for ievolution = 2 : nevolutions
     % Performance of champions
     for convol = 1 : nkernels
         old_champ = double(khistory{ievolution - 1, convol});
-        rr = convn(data, old_champ, 'same'); % ./ sum(abs(old_champ(:)));
+        rr = convn(data, old_champ, 'same');
         rr(zeroz) = 0;  % Only consider 1 centered positions
         res(convol, :, :, :) = rr;
     end
@@ -76,7 +68,7 @@ for ievolution = 2 : nevolutions
         mutant = permuteKern(champ);
         
         % Perform convolutions with mutant
-        rr = convn(data, mutant, 'same'); % ./ sum(abs(mutant(:)));
+        rr = convn(data, mutant, 'same'); 
         rr(zeroz) = 0;
         res(nkernels + 1, :, :, :) = rr;
         
@@ -87,11 +79,10 @@ for ievolution = 2 : nevolutions
         empty = maxs == 0;  % Deal with empty space being attributed to kernel 1
         imaxs(empty) = 0;
         
-        mwins = imaxs == nkernels + 1;% & maxs ~= 0;
+        mwins = imaxs == nkernels + 1;
         mutant_score = sum(maxs(mwins));
         
         % Calculate the champions score
-        %cwins = imaxs == ikernel; % & maxs ~= 0;
         [cmaxs cimaxs] = max(res(1:nkernels, :, :, :));
         cempty = cmaxs == 0;  % Deal with empty space being attributed to kernel 1
         cimaxs(cempty) = 0;
@@ -99,18 +90,16 @@ for ievolution = 2 : nevolutions
         cwins = cimaxs == ikernel;
         champ_score = sum(cmaxs(cwins));
         
-        %ss = imaxs == 0;
-        %trim = khistory{ievolution, :};
-        sscore(ievolution, ikernel) = nnz(res(1:nkernels, :, :, :) == 0)/numel(res);%sum(abs(trim(:)));
+        sscore(ievolution, ikernel) = nnz(res(1:nkernels, :, :, :) == 0)/numel(res);
         
         % if improved, make it current
-        if mutant_score >= champ_score; %kvhistory{ievolution -1, ikernel};
+        if mutant_score >= champ_score; 
            khistory{ievolution, ikernel} = mutant;
            kvhistory{ievolution, ikernel} = mutant_score;
            mutant_wins = [mutant_wins; ievolution];
         else
            khistory{ievolution, ikernel} = champ;
-           kvhistory{ievolution, ikernel} = champ_score; %kvhistory{ievolution -1, ikernel};            
+           kvhistory{ievolution, ikernel} = champ_score;         
         end 
         
         mscores(ievolution, ikernel) = mutant_score;
@@ -143,7 +132,7 @@ for ievolution = 2 : nevolutions
            leg{i} = num2str(i); 
         end
         legend(leg);
-        %hold off
+        
         pause(0.001);
     end
 end
@@ -155,7 +144,6 @@ for ikernel = 1 : nkernels
     scores = [kvhistory{:, ikernel}];
     colour = cjet(floor(size(cjet, 1)*ikernel / nkernels), :);
     plot(scores, 'color', colour);
-    %plot(scores, '.', 'color', rand(3, 1));
 end
 title(sprintf('Kernel values over time, %s from %d to %d', ffilename, sevent, nevents));
 xlabel('Evolution number');
@@ -186,7 +174,6 @@ hold on
 % Plot kernel values history
 for ikernel = 1 : nkernels
     plot(sscore(:, ikernel), 'color', rand(3, 1));
-    %plot(scores, '.', 'color', rand(3, 1));
 end
 title(sprintf('Percent number of zeros in result, %s from %d to %d', ...
     ffilename, sevent, nevents));
@@ -198,7 +185,11 @@ if isGPUCluster()
     % Generate filename: nKernels-nevolutions-date 
     outname = sprintf('%d-%d-%s', nkernels, nevolutions, ...
         char(datetime('now','Format','d-MM-y-HH:mm:ss')));
+    % Collect everything from GPU
+    data = gather(data);
+    mutant_wins = gather(mutant_wins);
+    sscore = gather(sscore);
     save(outname, 'nevolutions', 'nkernels', 'kvhistory', 'khistory', ...
-        'sscore', 'mutant_wins');
+        'sscore', 'mutant_wins', 'data');
     disp(outname)
 end
