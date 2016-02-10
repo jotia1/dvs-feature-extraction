@@ -4,7 +4,8 @@
 % Many variables from the kernel growing stage are required
 
 k_fig = figure('Position', [0, 0, 640, 480]);
-F(nevolutions) = struct('cdata',[],'colormap',[]);
+F(1) = struct('cdata',[],'colormap',[]);
+zeroz = data == 0;
 
 p_fig = figure;
 cjet = [1 1 1; jet];
@@ -30,9 +31,9 @@ for ikernel = 1 : nkernels
 end
 h_line = plot([1; 1], [0; largest], 'k');
 
-
+frame_counter = 1;
 pause;
-for ievolution = 1 : 50 : nevolutions
+for ievolution = 1 : 2 : nevolutions
     set(0, 'CurrentFigure', p_fig);
     subplot(2, 2, [1, 2]);
     hold on
@@ -81,7 +82,9 @@ for ievolution = 1 : 50 : nevolutions
     title(sprintf('Pixels won, evo: %d', ievolution));
     
     pause(0.01);
-    F(ievolution) = getframe(k_fig);    
+    
+    F(frame_counter) = getframe(k_fig);    
+    frame_counter = frame_counter + 1;
     
 end
 
