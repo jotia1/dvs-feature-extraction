@@ -1,0 +1,13 @@
+#! /bin/sh
+
+remote="goliath.labs.eait.uq.edu.au"
+moss="moss.labs.eait.uq.edu.au"
+id="s4290365"
+rmtdir="dvs-feature-extraction/results"
+cmd="ssh $id@$remote"
+
+for i in `ssh $id@$remote ls $rmtdir`; do
+  $cmd "scp $rmtdir/$i $id@$moss:~/"
+  scp $id@$moss:~/$i .
+  ssh $id@$moss "rm ~/$i"
+done
