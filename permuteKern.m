@@ -50,11 +50,14 @@ function [ outkern ] = permuteKern( inkern )
         elseif choice == 4;% && ...
                 %size(find((inkern < 27 & inkern > -27) == 1), 1) >= 2; % Pick two elements and add -1 and 1
             %is = ceil(rand(2,1) * numel(inkern));
-            noptions = find(inkern > -27 == 1);
-            poptions = find(inkern < 27 == 1);
-            nis = randsample(noptions, 1);
-            pis = randsample(poptions, 1);
-            %is = randsample(options, 2);
+            nis = 1; pis = 1;
+            while nis == pis;
+                noptions = find(inkern > -27 == 1);
+                poptions = find(inkern < 27 == 1);
+                nis = randsample(noptions, 1);
+                pis = randsample(poptions, 1);
+                %is = randsample(options, 2);
+            end
             is = [pis; nis];
             outkern(is) = outkern(is) + [1;-1];
         end
