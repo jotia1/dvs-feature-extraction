@@ -2,7 +2,7 @@
 % Grow a community of intially random kerns simultaneously
 sevent = 1;
 
-filename = 'data/D-7-8-D-nm1-60s.aedat';sevent = 2001; nevents = 4840;
+filename = 'data/D-7-8-D-nm1-60s.aedat';sevent = 1; nevents = 7100;
 %filename = 'data/animal_farm.aedat'; nevents = 1600000;
 
 ffilename = filename;
@@ -19,10 +19,11 @@ aedatData = [xs, ys, ts, ps, [sizex; sizey; zeros(size(xs, 1)-2, 1)]];
 data = aedat2voxel(aedatData, 1, 1, 25);
 data = data(190*2 + 1: 190*3, :, :);
 zeroz = find(data == 0);
-data(zeroz) = -1/27;
+data(zeroz) = 0;
 
 nkernels = 2;
-nevolutions = 20;
+nevolutions = 6000;
+outname = 'nm1-2k-6000e-zero-2'
 khistory = cell(nevolutions, nkernels); % history of what each kernal looked like
 kvhistory = cell(nevolutions, nkernels); % history of each kernals value
 
@@ -183,12 +184,16 @@ ylabel('Percentage of zeros');
 % Will need to save variables to visualise later
 if isGPUCluster()
     % Generate filename: nKernels-nevolutions-date 
-    outname = sprintf('%d-%d-%s', nkernels, nevolutions, ...
-        char(datetime('now','Format','d-MM-y-HH:mm:ss')));
+    if ~exist('outname', 'var')
+        outname = sprintf('%d-%d-%s', nkernels, nevolutions, ...
+            char(datetime('now','Format','d-MM-y-HH:mm:ss')));
+    end
     % Collect everything from GPU
     data = gather(data);
     mutant_wins = gather(mutant_wins);
     sscore = gather(sscore);
+    khistory = gather(khistory);
+    kvhistory = gather(kvhistory);
     save(outname, 'nevolutions', 'nkernels', 'kvhistory', 'khistory', ...
         'sscore', 'mutant_wins', 'data');
     disp(outname)
