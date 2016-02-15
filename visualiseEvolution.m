@@ -11,10 +11,16 @@ end
 F(1) = struct('cdata',[],'colormap',[]);
 zeroz = data == 0;
 
-k_fig = figure;
+k_fig = figure('color', 'w');
 cjet = [1 1 1; jet];
 res = zeros([nkernels, size(data)]);
 largest = -Inf;
+
+% Create legend
+leg = cell(nkernels, 1);
+for i = 1:nkernels
+   leg{i} = num2str(i); 
+end
 
 for ikernel = 1 : nkernels
     subplot(2, 2, [1,2]);
@@ -32,11 +38,11 @@ for ikernel = 1 : nkernels
     if local_largest > largest;
        largest = local_largest;
     end
+    legend(leg);
 end
 h_line = plot([1; 1], [0; largest], 'k'); % plot verticle moving line
 % plot where mutants win
-plot(mutant_wins, zeros(1, numel(mutant_wins)), '*');
-
+%plot(mutant_wins, zeros(1, numel(mutant_wins)), '*');  % TODO - needs updating now mutant_wins format changed
 
 frame_counter = 1;
 pause;
@@ -61,6 +67,7 @@ for ievolution = 1 : 10 : nevolutions
         subplot(2, 2, ikernel+2);
         k = gather(khistory{ievolution, ikernel});
         visualiseKern(k, sprintf('Evo num - %d', ievolution), k_fig);
+        title(sprintf('kernel: %d', ikernel));
         
         % Do conv
         if show_winnings
@@ -105,7 +112,7 @@ end
 save_vid = lower(input('Save? y/[n]: ', 's'));
 if strcmp(save_vid, 'y');
     % Save anything that has been recorded
-    outname = lower(input('Filename (add .avi)? y/[n]: ', 's'));
+    outname = lower(input('Filename? (add .avi): ', 's'));
     v = VideoWriter(outname);
     open(v);
     writeVideo(v, F);
