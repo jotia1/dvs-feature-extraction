@@ -8,15 +8,15 @@
 
 %% Settings
 nkernels = 2;
-nevolutions = 1000;
-msps = 25;              % Milliseconds per time slice
+nevolutions = 20000;
+msps = 10;              % Milliseconds per time slice
 emptyValue = -1/27;    % Empty space (zeros) in data to be replaced with
 
 filename = 'data/D-7-8-D-nm1-60s.aedat';sevent = 2001; nevents = 4840;
 %filename = 'data/animal_farm.aedat'; sevent = 1; nevents = 1600000;
 
 evolutionsPerSave = ceil(max(nevolutions / 5, 1000));
-vis_progress = 1;  % Visialise kernel progress while computing
+vis_progress = 0;  % Visialise kernel progress while computing
 prog_saves = 0;    % Save progress periodically while computing
 
 %% Algorithm - O(Evolution * Kernels^2 * Convolutions)
@@ -87,7 +87,7 @@ for ievolution = 2 : nevolutions
     % If mod(x) save progress 
     if prog_saves && mod(ievolution, evolutionsPerSave) == 0;
         % TODO this may cause problems by removing memory from gpu
-        outname = sprintf('%d-%d-%s', nkernels, nevolutions, ...                
+        outname = sprintf('%d-%d-%dms-%s', nkernels, nevolutions, msps, ...                
             char(datetime('now','Format','d-MM-y-HH:mm:ss'))); 
         data = gather(data);                                                        
         mutant_wins = gather(mutant_wins);                                          
@@ -200,7 +200,7 @@ for ievolution = 2 : nevolutions
 end
 
 % Save results
-outname = sprintf('%d-%d-%s', nkernels, nevolutions, ...                
+outname = sprintf('%d-%d-%dms-%s', nkernels, nevolutions, msps, ...                
     char(datetime('now','Format','d-MM-y-HH:mm:ss'))); 
 data = gather(data);                                                        
 mutant_wins = gather(mutant_wins);                                          
