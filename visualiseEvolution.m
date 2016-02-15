@@ -33,7 +33,10 @@ for ikernel = 1 : nkernels
        largest = local_largest;
     end
 end
-h_line = plot([1; 1], [0; largest], 'k');
+h_line = plot([1; 1], [0; largest], 'k'); % plot verticle moving line
+% plot where mutants win
+plot(mutant_wins, zeros(1, numel(mutant_wins)), '*');
+
 
 frame_counter = 1;
 pause;
@@ -56,11 +59,12 @@ for ievolution = 1 : 10 : nevolutions
         
         % Now visualise kernels
         subplot(2, 2, ikernel+2);
-        visualiseKern(khistory{ievolution, ikernel}, sprintf('Evo num - %d', ievolution), k_fig);
+        k = gather(khistory{ievolution, ikernel});
+        visualiseKern(k, sprintf('Evo num - %d', ievolution), k_fig);
         
         % Do conv
         if show_winnings
-            kernel = khistory{ievolution, ikernel};
+            kernel = gather(khistory{ievolution, ikernel});
             rr = convn(data, kernel, 'same');
             rr(zeroz) = 0;  % only zero centered positions
             res(ikernel, :, :, :) = rr;

@@ -26,6 +26,5 @@ function [ kern ] = randKern(  )
         end
     end
     
-    %kern = repmat(kern, [1, 1, 3]);
 end
 
