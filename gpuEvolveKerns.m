@@ -145,7 +145,7 @@ for ievolution = 2 : nevolutions
         for iikernel = 1 : nkernels
             dups = dups + (squeeze(res(iikernel, :, :, :)) == mmaxs);
         end
-        
+        dups(find(dups == 0)) = 1;
         mwmaxs = mmaxs ./ dups;
         kwins = find(squeeze(res(nkernels + 1, :, :, :)) == mmaxs);
         
