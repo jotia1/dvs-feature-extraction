@@ -8,7 +8,7 @@
 
 %% Settings
 nkernels = 2;
-nevolutions = 500;
+nevolutions = 1000;
 msps = 25;              % Milliseconds per time slice
 emptyValue = -1/27;    % Empty space (zeros) in data to be replaced with
 
@@ -91,11 +91,11 @@ for ievolution = 2 : nevolutions
             char(datetime('now','Format','d-MM-y-HH:mm:ss'))); 
         data = gather(data);                                                        
         mutant_wins = gather(mutant_wins);                                          
-        sscore = gather(sscore);                                                    
+        %sscore = gather(sscore);                                                    
         khistory = gather(khistory);                                                
         kvhistory = gather(kvhistory);                                              
         save(outname, 'nevolutions', 'nkernels', 'kvhistory', 'khistory', ...       
-            'sscore', 'mutant_wins', 'data');                                       
+            'mutant_wins', 'data');                                       
         disp(outname)  
     end
 
@@ -108,9 +108,15 @@ for ievolution = 2 : nevolutions
     end
     
     % calc champ scores agaisnt eachother
-    [cmaxs, cimaxs] = max(res); 
-    cempty = cmaxs == 0;  % empty space attributed to 1. 
-    cimaxs(cempty) = 0;
+    cmaxs = squeeze(max(res)); 
+    
+    % Now deal with ties being attributed to first winner
+    dups = zeros(size(cmaxs));
+    for iikernel = 1 : nkernels
+        dups = dups + (squeeze(res(iikernel, :, :, :)) == cmaxs);
+    end
+    % champs weighted maxs
+    cwmaxs = cmaxs ./ dups; % Share out winnings
     
     % for each kernel
     for ikernel = 1 : nkernels
@@ -124,17 +130,15 @@ for ievolution = 2 : nevolutions
         res(nkernels + 1, :, :, :) = rr;  % TODO unecessary mem copy here
         
         % old champ score
-        cwins = cimaxs == ikernel;
-        champ_score = gather(sum(cmaxs(cwins)));
+        prevChampTmp = squeeze(res(ikernel, :, :, :)); 
+        % TODO FIX this doesnt account for kernel 1 collection
+        cwins = find(prevChampTmp == cmaxs);
+        champ_score = gather(sum(cwmaxs(cwins)));
         
         % Calculate score of mutant against previous champs (excluding own)
-        prevChampTmp = res(ikernel, :, :, :);  
         res(ikernel, :, :, :) = -Inf;  %Set prevChamps spot to -Inf
-        [mmaxs, midxs] = max(res);      %mutants max's
-        mmaxs = squeeze(mmaxs); midxs = squeeze(midxs);
         
-        empty = mmaxs == 0;  % Deal with empty space being attributed to kernel 1
-        midxs(empty) = 0;
+        mmaxs = squeeze(max(res));      %mutants max's
         
         % Now deal with ties being attributed to first winner
         dups = zeros(size(mmaxs));
@@ -142,13 +146,11 @@ for ievolution = 2 : nevolutions
             dups = dups + (squeeze(res(iikernel, :, :, :)) == mmaxs);
         end
         
-        mmaxs = mmaxs ./ dups;
-        kwins = squeeze(res(nkernels + 1, :, :, :)) == mmaxs;
+        mwmaxs = mmaxs ./ dups;
+        kwins = find(squeeze(res(nkernels + 1, :, :, :)) == mmaxs);
         
-        % Actual collect mutant score
-        mwins = midxs == nkernels + 1;
         % Note must use kwins and NOT midxs as midxs defaults wins to k1
-        mutant_score = sum(mmaxs(kwins));
+        mutant_score = sum(mwmaxs(kwins));
         
         res(ikernel, :, :, :) = prevChampTmp;  % Set champ values back
         
@@ -156,7 +158,7 @@ for ievolution = 2 : nevolutions
         if mutant_score >= champ_score; 
            khistory{ievolution, ikernel} = mutant;
            kvhistory{ievolution, ikernel} = mutant_score;
-           mutant_wins = [mutant_wins; ievolution];
+           mutant_wins = [mutant_wins; ikernel, ievolution];
         else
            khistory{ievolution, ikernel} = champ;
            kvhistory{ievolution, ikernel} = champ_score;         
