@@ -8,7 +8,18 @@ show_winnings = 0;
 if show_winnings;
     p_fig = figure('Position', [0, 0, 640, 480]);
 end
-F(1) = struct('cdata',[],'colormap',[]);
+%F(1) = struct('cdata',[],'colormap',[]);
+save_vid = lower(input('Save? y/[n]: ', 's'));
+if strcmp(save_vid, 'y');
+    save_vid = 1;
+    outname = lower(input('Filename? (add .avi): ', 's'));
+    v = VideoWriter(outname);
+    v.FrameRate = 1;
+    open(v);
+else
+    save_vid = 0;
+end
+
 zeroz = data == 0;
 
 k_fig = figure('color', 'w');
@@ -38,8 +49,9 @@ for ikernel = 1 : nkernels
     if local_largest > largest;
        largest = local_largest;
     end
-    legend(leg);
+    
 end
+legend(leg);
 h_line = plot([1; 1], [0; largest], 'k'); % plot verticle moving line
 % plot where mutants win
 %plot(mutant_wins, zeros(1, numel(mutant_wins)), '*');  % TODO - needs updating now mutant_wins format changed
@@ -103,18 +115,16 @@ for ievolution = 1 : 10 : nevolutions
     
     pause(0.01);
     
-    F(frame_counter) = getframe(k_fig);    
-    frame_counter = frame_counter + 1;
+    if save_vid;
+        frame = getframe(k_fig);
+        writeVideo(v, frame);
+    end
+    %F(frame_counter) = getframe(k_fig);    
+    %frame_counter = frame_counter + 1;
     
 end
 
 
-save_vid = lower(input('Save? y/[n]: ', 's'));
-if strcmp(save_vid, 'y');
-    % Save anything that has been recorded
-    outname = lower(input('Filename? (add .avi): ', 's'));
-    v = VideoWriter(outname);
-    open(v);
-    writeVideo(v, F);
+if save_vid;
     close(v); % finish matlab video
 end
