@@ -8,12 +8,12 @@
 
 %% Settings
 nkernels = 2;
-nevolutions = 10;
-msps = 10;              % Milliseconds per time slice
+nevolutions = 10000;
+msps = 100;              % Milliseconds per time slice
 emptyValue = -1/27;    % Empty space (zeros) in data to be replaced with
 
-filename = 'data/D-7-8-D-nm1-60s.aedat';sevent = 2001; nevents = 4840;
-%filename = 'data/animal_farm.aedat'; sevent = 1; nevents = 1600000;
+%filename = 'data/D-7-8-D-nm1-60s.aedat';sevent = 2001; nevents = 4840;
+filename = 'data/animal_farm.aedat'; sevent = 1; nevents = 1600000;
 
 evolutionsPerSave = ceil(max(nevolutions / 5, 1000));
 vis_progress = 0;  % Visialise kernel progress while computing
@@ -204,7 +204,7 @@ for ievolution = 2 : nevolutions
 end
 
 % Save results
-outname = sprintf('%d-%d-%dms-%s', nkernels, nevolutions, msps, ...                
+outname = sprintf('af-%d-%d-%dms-%s', nkernels, nevolutions, msps, ...                
     char(datetime('now','Format','d-MM-y-HH:mm:ss'))); 
 data = gather(data);                                                        
 mutant_wins = gather(mutant_wins);                                          
