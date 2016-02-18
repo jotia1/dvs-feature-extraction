@@ -209,7 +209,7 @@ end
 
 % Save results
 outname = sprintf('batch/%s-%d-%d-%d-%dms-SWO-%s', filename(6:end-6), voxelSpatial, nkernels, nevolutions, msps, ...                
-    char(datetime('now','Format','d-MM-y-HH:mm:ss'))); 
+    char(datetime('now','Format','d-MM-y-HH-mm-ss'))); 
 data = gather(data);                                                        
 mutant_wins = gather(mutant_wins);                                          
 %sscore = gather(sscore);                                                      

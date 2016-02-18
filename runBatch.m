@@ -14,7 +14,7 @@ for voxelSpatial = vsizes
         for nkernels = nksizes;
             disp('----- Starting Evolution -----');
             fprintf('%s-%d-%d-%dms-SWO-%s\n', filename(6:end-6), voxelSpatial, nkernels, msps, ...                
-                char(datetime('now','Format','d-MM-y-HH:mm:ss'))); 
+                char(datetime('now','Format','d-MM-y-HH-mm-ss'))); 
             tic
             gpuEvolveKerns;
             toc
