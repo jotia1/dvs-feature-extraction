@@ -43,19 +43,17 @@ prog_saves = 0;    % Save progress periodically while computing
 
 %% Code
 
-ffilename = filename(6:end);
+ffilename = filename(6:end-6);  % Strip data/ and .aedat
 ffilename(ffilename == '_') = ' ';  % Generate graph friendly name
 cjet = colormap;
 close gcf; %colormap opens a figure...
 
 [ xs, ys, ts, ps, sizex, sizey ] = loadDVSclean( filename );
 
-sevent = 1;
-nevents = numel(xs);
-%xs = xs(sevent:nevents);
-%ys = ys(sevent:nevents);
-%ts = ts(sevent:nevents);
-%ps = ps(sevent:nevents);
+xs = xs(sevent:nevents);
+ys = ys(sevent:nevents);
+ts = ts(sevent:nevents);
+ps = ps(sevent:nevents);
 
 aedatData = [xs, ys, ts, ps, [sizex; sizey; zeros(size(xs, 1)-2, 1)]];
 %voxelSpatial = 1;
@@ -93,7 +91,7 @@ for ievolution = 2 : nevolutions
     if prog_saves && mod(ievolution, evolutionsPerSave) == 0;
         % TODO this may cause problems by removing memory from gpu
         outname = sprintf('%d-%d-%dms-%s', nkernels, nevolutions, msps, ...                
-            char(datetime('now','Format','d-MM-y-HH:mm:ss'))); 
+            char(datetime('now','Format','d-MM-y-HH:mm:ss'))); % TODO Update to refect bottom
         data = gather(data);                                                        
         mutant_wins = gather(mutant_wins);                                          
         %sscore = gather(sscore);                                                    
@@ -140,7 +138,8 @@ for ievolution = 2 : nevolutions
         
         % old champ score
         prevChampTmp = squeeze(res(ikernel, :, :, :)); 
-        % TODO FIX this doesnt account for kernel 1 collection
+        % TODO FIX this doesnt account for kernel 1 collection % EDIT I
+        % THINK THIS IS FIXED BUT NEED TO CHECK MORE THOUROUGHLY
         cwins = find(prevChampTmp == cmaxs);
         champ_score = gather(sum(cwmaxs(cwins)));
         
@@ -209,7 +208,7 @@ for ievolution = 2 : nevolutions
 end
 
 % Save results
-outname = sprintf('batch/%s-%d-%d-%d-%dms-SWO-%s', ffilename, voxelSpatial, nkernels, nevolutions, msps, ...                
+outname = sprintf('batch/%s-%d-%d-%d-%dms-SWO-%s', filename(6:end-6), voxelSpatial, nkernels, nevolutions, msps, ...                
     char(datetime('now','Format','d-MM-y-HH:mm:ss'))); 
 data = gather(data);                                                        
 mutant_wins = gather(mutant_wins);                                          
