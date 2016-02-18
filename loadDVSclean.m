@@ -66,13 +66,13 @@ function [ xs, ys, ts, ps, sizex, sizey ] = loadDVSclean( filename )
         fp = load('freq_pixels.mat');  % Frequently firing pixels (to remove)
         %[bxs, bys] = ind2sub([sizex, sizey], fp.freq_pixels);
         out = zeros(size(xs, 1), 4);
-        i = 1;
+        i = 0;
         for elem = 1:size(xs, 1);
             if find(fp.freq_pixels == sub2ind([sizex, sizey], xs(elem)+1, ys(elem)+1));
                 continue;
             end
-            out(i, :) = [xs(elem), ys(elem), ts(elem), ps(elem)];
             i = i + 1;
+            out(i, :) = [xs(elem), ys(elem), ts(elem), ps(elem)];
         end
         xs = out(1:i, 1);ys = out(1:i, 2);ts = out(1:i, 3);ps = out(1:i, 4);
         

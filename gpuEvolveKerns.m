@@ -50,10 +50,12 @@ close gcf; %colormap opens a figure...
 
 [ xs, ys, ts, ps, sizex, sizey ] = loadDVSclean( filename );
 
-xs = xs(sevent:nevents);
-ys = ys(sevent:nevents);
-ts = ts(sevent:nevents);
-ps = ps(sevent:nevents);
+sevent = 1;
+nevents = numel(xs);
+%xs = xs(sevent:nevents);
+%ys = ys(sevent:nevents);
+%ts = ts(sevent:nevents);
+%ps = ps(sevent:nevents);
 
 aedatData = [xs, ys, ts, ps, [sizex; sizey; zeros(size(xs, 1)-2, 1)]];
 %voxelSpatial = 1;
