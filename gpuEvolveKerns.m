@@ -7,13 +7,13 @@
 %   - Built in option to convert straight to video
 
 %% Settings
-nkernels = 2;
+%nkernels = 2;
 nevolutions = 10000;
-msps = 100;              % Milliseconds per time slice
+%msps = 100;              % Milliseconds per time slice
 emptyValue = -1/27;    % Empty space (zeros) in data to be replaced with
 
 %filename = 'data/D-7-8-D-nm1-60s.aedat';sevent = 2001; nevents = 4840;
-filename = 'data/animal_farm.aedat'; sevent = 1; nevents = 1600000;
+%filename = 'data/animal_farm.aedat'; sevent = 1; nevents = 1600000;
 
 evolutionsPerSave = ceil(max(nevolutions / 5, 1000));
 vis_progress = 0;  % Visialise kernel progress while computing
@@ -43,7 +43,7 @@ prog_saves = 0;    % Save progress periodically while computing
 
 %% Code
 
-ffilename = filename;
+ffilename = filename(6:end);
 ffilename(ffilename == '_') = ' ';  % Generate graph friendly name
 cjet = colormap;
 close gcf; %colormap opens a figure...
@@ -56,7 +56,8 @@ ts = ts(sevent:nevents);
 ps = ps(sevent:nevents);
 
 aedatData = [xs, ys, ts, ps, [sizex; sizey; zeros(size(xs, 1)-2, 1)]];
-loaded = aedat2voxel(aedatData, 1, 1, msps);
+%voxelSpatial = 1;
+loaded = aedat2voxel(aedatData, voxelSpatial, voxelSpatial, msps);
 data = gpuArray(double(loaded(190*2 + 1: 190*3, :, :)));
 clearvars loaded % Clean up a little
 zeroz = find(data == 0);
@@ -83,7 +84,9 @@ end
 
 % for each evolution
 for ievolution = 2 : nevolutions
-    disp(ievolution)
+    if mod(ievolution, 500) == 0
+        disp(ievolution)
+    end
     % If mod(x) save progress 
     if prog_saves && mod(ievolution, evolutionsPerSave) == 0;
         % TODO this may cause problems by removing memory from gpu
@@ -204,7 +207,7 @@ for ievolution = 2 : nevolutions
 end
 
 % Save results
-outname = sprintf('af-%d-%d-%dms-%s', nkernels, nevolutions, msps, ...                
+outname = sprintf('batch/%s-%d-%d-%d-%dms-SWO-%s', ffilename, voxelSpatial, nkernels, nevolutions, msps, ...                
     char(datetime('now','Format','d-MM-y-HH:mm:ss'))); 
 data = gather(data);                                                        
 mutant_wins = gather(mutant_wins);                                          
