@@ -44,7 +44,7 @@ function [ res, ndata ] = aedat2voxel(indata, xdim, ydim, tdim )
 
     % Assign 1 to any cell in which a pixel fires
     for i = 1:size(ts,1);
-        disp(i/size(ts,1));
+        %disp(i/size(ts,1));
         x = xs(i) + 1;  % Matlab indexs from 1
         y = ys(i) + 1;  % Matlab indexs from 1
         t = ceil((ts(i) - ts(1)) / tk) + 1;
