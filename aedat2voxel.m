@@ -7,7 +7,7 @@ function [ res, ndata ] = aedat2voxel(indata, xdim, ydim, tdim )
 %   aedatData = [xs, ys, ts, ps, [sizex; sizey; zeros(size(xs, 1)-2, 1)]];
 %   data = aedat2voxel(aedatData, 1, 1, 25);
 
-    persistent firstts lastts ores ondata
+    persistent firstts lastts lastxdim lastydim lasttdim ores ondata
 
     if ischar(indata)l;
         [ xs, ys, ts, ps, sizex, sizey ] = loadDVSclean( filename );
@@ -19,7 +19,8 @@ function [ res, ndata ] = aedat2voxel(indata, xdim, ydim, tdim )
         return;
     end
     
-    if firstts == ts(1) & lastts == ts(end);  % Preloaded data
+    if firstts == ts(1) & lastts == ts(end) & lastxdim == xdim ...
+            & lastydim == ydim & lasttdim == tdim;  % Preloaded data
         disp('Resetting voxel data');
         res = ores;
         ndata = ondata;
@@ -31,10 +32,13 @@ function [ res, ndata ] = aedat2voxel(indata, xdim, ydim, tdim )
 %     ts = ts(sevent:nevents);
 %     ps = ps(sevent:nevents);
 
+
     sizet = ts(end) - ts(1); % Won't work for videos over 71 minutes (wrapping)
     tk = tdim*1e3; % Time constant
     numtbuckets = ceil(sizet / tk) + 1;
-
+    sizex = ceil(sizex / xdim);
+    sizey = ceil(sizey / xdim);
+    
 %     fp = load('freq_pixels.mat');  % Frequently firing pixels (to remove)
 
     data = zeros(sizex, sizey, numtbuckets, 'int8');
@@ -45,8 +49,8 @@ function [ res, ndata ] = aedat2voxel(indata, xdim, ydim, tdim )
     % Assign 1 to any cell in which a pixel fires
     for i = 1:size(ts,1);
         %disp(i/size(ts,1));
-        x = xs(i) + 1;  % Matlab indexs from 1
-        y = ys(i) + 1;  % Matlab indexs from 1
+        x = ceil((xs(i) + 1) / xdim);  % Matlab indexs from 1
+        y = ceil((ys(i) + 1) / ydim);  % Matlab indexs from 1
         t = ceil((ts(i) - ts(1)) / tk) + 1;
         p = ps(i);
 
@@ -81,6 +85,9 @@ function [ res, ndata ] = aedat2voxel(indata, xdim, ydim, tdim )
     res = [ep; en; eb; eo];
     firstts = ts(1);
     lastts = ts(end);
+    lastxdim = xdim;
+    lastydim = ydim;
+    lasttdim = tdim;
     ores = res;
     ondata = ndata;
 

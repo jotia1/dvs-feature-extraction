@@ -56,9 +56,11 @@ ts = ts(sevent:nevents);
 ps = ps(sevent:nevents);
 
 aedatData = [xs, ys, ts, ps, [sizex; sizey; zeros(size(xs, 1)-2, 1)]];
-%voxelSpatial = 1;
+voxelSpatial = 3;
 loaded = aedat2voxel(aedatData, voxelSpatial, voxelSpatial, msps);
-data = gpuArray(double(loaded(sizex*2 + 1: sizey*3, :, :)));
+sizex = ceil(sizex / voxelSpatial);
+sizey = ceil(sizey / voxelSpatial);
+data = gpuArray(double(loaded(sizex*2 + 1: sizex*3, :, :)));
 clearvars loaded % Clean up a little
 zeroz = find(data == 0);
 data(zeroz) = emptyValue;
