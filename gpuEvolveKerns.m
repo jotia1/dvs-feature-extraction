@@ -8,7 +8,7 @@
 
 %% Settings
 %nkernels = 2;
-nevolutions = 100;
+nevolutions = 10000;
 %msps = 100;              % Milliseconds per time slice
 emptyValue = -1/27;    % Empty space (zeros) in data to be replaced with
 
@@ -56,7 +56,7 @@ ts = ts(sevent:nevents);
 ps = ps(sevent:nevents);
 
 aedatData = [xs, ys, ts, ps, [sizex; sizey; zeros(size(xs, 1)-2, 1)]];
-voxelSpatial = 3;
+%voxelSpatial = 3;
 loaded = aedat2voxel(aedatData, voxelSpatial, voxelSpatial, msps);
 sizex = ceil(sizex / voxelSpatial);
 sizey = ceil(sizey / voxelSpatial);
