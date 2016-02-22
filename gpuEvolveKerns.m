@@ -8,7 +8,7 @@
 
 %% Settings
 %nkernels = 2;
-nevolutions = 10000;
+nevolutions = 100;
 %msps = 100;              % Milliseconds per time slice
 emptyValue = -1/27;    % Empty space (zeros) in data to be replaced with
 
@@ -65,13 +65,17 @@ clearvars loaded % Clean up a little
 zeroz = find(data == 0);
 data(zeroz) = emptyValue;
 
-khistory = cell(nevolutions, nkernels); % history of what each kernal was
-kvhistory = cell(nevolutions, nkernels); % history of each kernals value
 res = gpuArray.zeros([nkernels + 1, size(data)]); % +1 for mutant
 oldChampScores = zeros(nkernels, 1);
 prevChampTmp = zeros(size(data));
 scores = gpuArray.zeros(nkernels + 1, 1);
-mutant_wins = [];
+
+% Statistics to keep
+mutant_wins = []; % When do mutants win
+platesWon = gpuArray.zeros(nevolutions, nkernels);
+rawCaloriesWon = gpuArray.zeros(nevolutions, nkernels);
+khistory = cell(nevolutions, nkernels); % history of what each kernal was
+kvhistory = cell(nevolutions, nkernels); % history of each kernals value
 
 if vis_progress;
     prog = figure;
@@ -82,6 +86,8 @@ end
 for ikernel = 1 : nkernels
     khistory{1, ikernel} = gpuArray(double(randKern()));
     kvhistory{1, ikernel} = -Inf;
+    platesWon(1, ikernel) = -Inf;
+    rawCaloriesWon(1, ikernel) = -Inf;
 end
 
 % for each evolution
@@ -93,7 +99,7 @@ for ievolution = 2 : nevolutions
     if prog_saves && mod(ievolution, evolutionsPerSave) == 0;
         % TODO this may cause problems by removing memory from gpu
         outname = sprintf('%d-%d-%dms-%s', nkernels, nevolutions, msps, ...                
-            char(datetime('now','Format','d-MM-y-HH:mm:ss'))); % TODO Update to refect bottom
+            char(datetime('now','Format','d-MM-y-HH-mm-ss'))); % TODO Update to refect bottom
         data = gather(data);                                                        
         mutant_wins = gather(mutant_wins);                                          
         %sscore = gather(sscore);                                                    
@@ -142,13 +148,15 @@ for ievolution = 2 : nevolutions
         prevChampTmp = squeeze(res(ikernel, :, :, :)); 
         % TODO FIX this doesnt account for kernel 1 collection % EDIT I
         % THINK THIS IS FIXED BUT NEED TO CHECK MORE THOUROUGHLY
+        % EDIT2: Hmm yes I think this is fine because I count this champs
+        % winnings based on where IT equals cmaxs... Still I'll leave this
         cwins = find(prevChampTmp == cmaxs);
         champ_score = gather(sum(cwmaxs(cwins)));
         
         % Calculate score of mutant against previous champs (excluding own)
         res(ikernel, :, :, :) = -Inf;  %Set prevChamps spot to -Inf
         
-        mmaxs = squeeze(max(res));      %mutants max's
+        mmaxs = squeeze(max(res));      % mutants max's
         
         % Now deal with ties being attributed to first winner
         dups = zeros(size(mmaxs));
@@ -168,10 +176,14 @@ for ievolution = 2 : nevolutions
         if mutant_score >= champ_score; 
            khistory{ievolution, ikernel} = mutant;
            kvhistory{ievolution, ikernel} = mutant_score;
+           platesWon(ievolution, ikernel) = numel(kwins);
+           rawCaloriesWon(ievolution, ikernel) = sum(rr(:));
            mutant_wins = [mutant_wins; ikernel, ievolution];
         else
            khistory{ievolution, ikernel} = champ;
-           kvhistory{ievolution, ikernel} = champ_score;         
+           kvhistory{ievolution, ikernel} = champ_score;        
+           platesWon(ievolution, ikernel) = numel(cwins);
+           rawCaloriesWon(ievolution, ikernel) = sum(prevChampTmp(:));
         end         
         
     end
@@ -213,7 +225,9 @@ end
 outname = sprintf('batch/%s-%d-%d-%d-%dms-SWO-%s', filename(6:end-6), voxelSpatial, nkernels, nevolutions, msps, ...                
     char(datetime('now','Format','d-MM-y-HH-mm-ss'))); 
 data = gather(data);                                                        
-mutant_wins = gather(mutant_wins);                                          
+mutant_wins = gather(mutant_wins);
+rawCaloriesWon = gather(rawCaloriesWon);
+platesWon = gather(platesWon);
 %sscore = gather(sscore);                                                      
 for k = 1 : numel(khistory)
     khistory{k} = gather(khistory{k});
@@ -222,4 +236,4 @@ for k = 1 : numel(kvhistory)
     kvhistory{k} = gather(kvhistory{k});
 end
 save(outname, 'nevolutions', 'nkernels', 'kvhistory', 'khistory', ...       
-    'mutant_wins', 'data');
+    'mutant_wins', 'data', 'rawCaloriesWon', 'platesWon');
