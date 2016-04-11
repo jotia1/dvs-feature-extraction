@@ -7,12 +7,17 @@
 %   - Built in option to convert straight to video
 
 %% Settings
-%nkernels = 2;
+if ~exist('nkernels', 'var')
+    nkernels = 2;
+end
 nevolutions = 10000;
-%msps = 100;              % Milliseconds per time slice
+kSize = 11; % Size of kernel
+if ~exist('msps', 'var')
+    msps = 30/kSize;              % Milliseconds per time slice
+end
 emptyValue = -1/27;    % Empty space (zeros) in data to be replaced with
 
-%filename = 'data/D-7-8-D-nm1-60s.aedat';sevent = 2001; nevents = 4840;
+filename = 'data/D-7-8-D-nm1-60s.aedat';sevent = 2001; nevents = 4840;
 %filename = 'data/animal_farm.aedat'; sevent = 1; nevents = 1600000;
 
 evolutionsPerSave = ceil(max(nevolutions / 5, 1000));
@@ -56,7 +61,7 @@ ts = ts(sevent:nevents);
 ps = ps(sevent:nevents);
 
 aedatData = [xs, ys, ts, ps, [sizex; sizey; zeros(size(xs, 1)-2, 1)]];
-%voxelSpatial = 3;
+voxelSpatial = 1;
 loaded = aedat2voxel(aedatData, voxelSpatial, voxelSpatial, msps);
 sizex = ceil(sizex / voxelSpatial);
 sizey = ceil(sizey / voxelSpatial);
@@ -84,7 +89,7 @@ end
     
 % Initialise kernels
 for ikernel = 1 : nkernels
-    khistory{1, ikernel} = gpuArray(double(randKern()));
+    khistory{1, ikernel} = gpuArray(double(randKern( kSize )));
     kvhistory{1, ikernel} = -Inf;
     platesWon(1, ikernel) = -Inf;
     rawCaloriesWon(1, ikernel) = -Inf;

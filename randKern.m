@@ -1,8 +1,8 @@
-function [ kern ] = randKern(  )
+function [ kern ] = randKern( ksize )
 %RANDKERN Summary of this function goes here
 %   Detailed explanation goes here
 
-    kern = randi(3, [3, 3, 3]) - 2;
+    kern = randi(3, [ksize, ksize, ksize]) - 2;
     
     while sum(kern(:)) > 0;  % Pick 1 and make 0 or pick 0 and make -1
         choice = randi(2);
